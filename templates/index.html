@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FrameFlow — Video Creator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --white:#fff; --off-white:#f8f7f5; --cream:#f2efe9;
+  --border:#e8e4dc; --border-strong:#d4cec4;
+  --text:#1a1814; --muted:#8c8880; --subtle:#b8b4ac;
+  --accent:#2d2a26; --gold:#b89b6a; --gold-light:#d4b98a;
+  --danger:#c0392b; --success:#27ae60;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--white);color:var(--text);font-family:'Outfit',sans-serif;font-weight:300;min-height:100vh;display:flex;flex-direction:column;}
+body::before{content:'';display:block;height:3px;background:linear-gradient(90deg,var(--gold) 0%,var(--gold-light) 50%,var(--gold) 100%);}
+
+/* ── HEADER ── */
+header{display:flex;align-items:center;gap:16px;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--white);}
+.logo-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;letter-spacing:2px;}
+.logo-sub{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);font-weight:400;}
+
+/* ── TAB NAV — tombol vertikal di kiri ── */
+.tab-nav{display:flex;flex-direction:column;gap:3px;padding:3px;background:var(--cream);border-radius:10px;border:1px solid var(--border);flex-shrink:0;}
+.tab-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-family:'Outfit',sans-serif;font-size:11px;font-weight:400;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.tab-btn.active{background:var(--white);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.tab-btn:hover:not(.active){color:var(--text);}
+
+/* ── MAIN TABS ── */
+#makerTab{flex:1;display:none;flex-direction:column;}
+#makerTab.active{display:flex;}
+#pinMakeTab{flex:1;display:none;flex-direction:column;}
+#pinMakeTab.active{display:flex;}
+
+/* ── MAKER LAYOUT ── */
+#mainGrid{flex:1;display:grid;grid-template-columns:1fr 1fr;}
+.panel-left{padding:32px 24px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:24px;}
+.panel-right{padding:32px 24px;background:var(--off-white);display:flex;flex-direction:column;gap:24px;}
+
+/* maker list panel */
+.maker-list-panel{padding:24px 20px;border-left:1px solid var(--border);background:var(--off-white);display:flex;flex-direction:column;gap:12px;min-width:0;}
+.maker-list-title{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--border);}
+
+/* section labels */
+.section-label{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.section-num{width:22px;height:22px;border-radius:50%;background:var(--text);color:var(--white);font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.section-num.done{background:var(--gold);}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;}
+
+/* upload zone */
+.upload-zone{border:1.5px dashed var(--border-strong);border-radius:12px;padding:36px 24px;text-align:center;cursor:pointer;transition:all .25s;background:var(--white);}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--gold);background:#fdf9f3;}
+.upload-icon-wrap{width:44px;height:44px;margin:0 auto 14px;background:var(--cream);border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.upload-zone h3{font-family:'Cormorant Garamond',serif;font-size:17px;margin-bottom:4px;}
+.upload-zone p{color:var(--muted);font-size:12px;}
+.format-tags{margin-top:10px;display:flex;gap:5px;justify-content:center;}
+.format-tag{font-size:9px;letter-spacing:1.5px;color:var(--subtle);border:1px solid var(--border);padding:2px 7px;border-radius:100px;text-transform:uppercase;}
+#fileInput{display:none;}
+
+/* image preview */
+.image-preview-card{display:none;background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.image-preview-card.show{display:block;}
+.image-preview-card img{width:100%;display:block;max-height:220px;object-fit:contain;background:var(--cream);}
+.image-card-footer{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);}
+.image-card-footer span{font-size:11px;color:var(--muted);}
+.btn-text{background:none;border:none;font-family:'Outfit',sans-serif;font-size:11px;color:var(--gold);cursor:pointer;letter-spacing:1px;text-transform:uppercase;}
+
+/* music list */
+.music-panel{display:none;flex-direction:column;gap:10px;}
+.music-panel.show{display:flex;}
+.music-list{display:flex;flex-direction:column;gap:5px;max-height:260px;overflow-y:auto;padding-right:2px;}
+.music-list::-webkit-scrollbar{width:3px;}
+.music-list::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+.music-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;transition:all .2s;}
+.music-item:hover{border-color:var(--gold-light);}
+.music-item.selected{border-color:var(--gold);background:#fdf6e8;}
+.music-item-check{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--border-strong);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.music-item.selected .music-item-check{background:var(--gold);border-color:var(--gold);}
+.music-item-check svg{display:none;}
+.music-item.selected .music-item-check svg{display:block;}
+.music-item-info{flex:1;min-width:0;}
+.music-item-name{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.music-item-dur{font-size:10px;color:var(--muted);margin-top:1px;}
+.btn-play-pause{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border-strong);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;}
+.btn-play-pause:hover{border-color:var(--gold);}
+.btn-play-pause.playing{border-color:var(--gold);background:var(--gold);}
+.waveform{display:none;gap:2px;align-items:center;height:14px;flex-shrink:0;}
+.waveform.active{display:flex;}
+.waveform span{display:block;width:2px;background:var(--gold);border-radius:2px;animation:wave .8s ease-in-out infinite;}
+.waveform span:nth-child(1){height:5px;animation-delay:0s;}
+.waveform span:nth-child(2){height:11px;animation-delay:.15s;}
+.waveform span:nth-child(3){height:7px;animation-delay:.3s;}
+.waveform span:nth-child(4){height:13px;animation-delay:.1s;}
+.waveform span:nth-child(5){height:5px;animation-delay:.25s;}
+@keyframes wave{0%,100%{transform:scaleY(1);}50%{transform:scaleY(.4);}}
+.audio-progress{display:none;height:2px;background:var(--border);border-radius:2px;margin-top:5px;}
+.audio-progress.show{display:block;}
+.audio-progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .5s linear;width:0%;}
+
+/* create btn */
+.btn-create{width:100%;padding:15px;background:var(--text);border:none;border-radius:10px;color:var(--white);font-family:'Cormorant Garamond',serif;font-size:17px;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-create:hover{background:var(--gold);}
+.btn-create:disabled{background:var(--border-strong);color:var(--subtle);cursor:not-allowed;}
+.error-box{display:none;background:#fef5f4;border:1px solid #f5c6c3;border-radius:7px;padding:10px 14px;color:var(--danger);font-size:12px;}
+.error-box.show{display:block;}
+
+/* progress screen */
+#progressScreen{display:none;grid-column:1/-1;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:60px 24px;}
+#progressScreen.show{display:flex;}
+.progress-spinner{width:44px;height:44px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1.2s linear infinite;margin-bottom:20px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.progress-heading{font-family:'Cormorant Garamond',serif;font-size:26px;margin-bottom:8px;}
+.progress-msg{color:var(--muted);font-size:13px;margin-bottom:28px;}
+.progress-track{width:300px;max-width:100%;height:2px;background:var(--border);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));transition:width .5s;width:0%;}
+.progress-pct{margin-top:10px;font-size:12px;color:var(--gold);letter-spacing:2px;}
+
+/* result screen */
+#resultScreen{display:none;grid-column:1/-1;padding:32px 24px;}
+#resultScreen.show{display:block;}
+.result-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+.result-title{font-family:'Cormorant Garamond',serif;font-size:24px;}
+.result-subtitle{font-size:12px;color:var(--muted);}
+.result-grid{display:grid;grid-template-columns:1fr 360px;gap:28px;}
+.video-wrap{border-radius:10px;overflow:hidden;border:1px solid var(--border);background:#000;}
+.video-wrap video{width:100%;display:block;max-height:400px;}
+.result-sidebar{display:flex;flex-direction:column;gap:18px;}
+.result-meta-card{background:var(--off-white);border:1px solid var(--border);border-radius:8px;padding:16px;}
+.result-meta-card h4{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.meta-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.meta-row:last-child{border:none;}
+.meta-row .label{color:var(--muted);}
+.result-actions{display:flex;flex-direction:column;gap:8px;}
+.btn-download{display:flex;align-items:center;justify-content:center;gap:7px;padding:13px;background:var(--text);color:var(--white);border:none;border-radius:9px;font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;text-decoration:none;transition:background .25s;}
+.btn-download:hover{background:var(--gold);}
+.btn-next{display:flex;align-items:center;justify-content:center;gap:7px;padding:13px;background:transparent;color:var(--text);border:1.5px solid var(--border-strong);border-radius:9px;font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;transition:all .25s;}
+.btn-next:hover{border-color:var(--gold);color:var(--gold);}
+
+/* maker log list */
+.mlog-item{background:var(--white);border:1px solid var(--border);border-radius:7px;overflow:hidden;margin-bottom:8px;}
+.mlog-item-header{display:flex;align-items:center;gap:8px;padding:8px 10px;}
+.mlog-info{flex:1;min-width:0;}
+.mlog-name{font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mlog-meta{font-size:9px;color:var(--subtle);margin-top:1px;}
+.mlog-btns{display:flex;gap:4px;flex-shrink:0;}
+.mlog-btn{padding:3px 7px;border-radius:4px;border:1px solid var(--border);background:transparent;font-size:10px;cursor:pointer;color:var(--muted);transition:all .2s;}
+.mlog-btn:hover{border-color:var(--gold);color:var(--gold);}
+.mlog-btn.del:hover{border-color:var(--danger);color:var(--danger);}
+.mlog-preview{display:none;padding:0 10px 10px;}
+.mlog-preview.show{display:block;}
+.mlog-preview video{width:100%;border-radius:5px;max-height:140px;}
+.mlog-empty{text-align:center;padding:24px 0;color:var(--subtle);font-size:12px;}
+
+/* ── PIN & MAKE ── */
+.pin-layout{display:grid;grid-template-columns:1fr 320px;flex:1;}
+.pin-main{padding:32px 24px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:20px;}
+.pin-sidebar{padding:20px 16px;background:var(--off-white);display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
+.search-row{display:flex;gap:8px;align-items:center;}
+.search-input{flex:1;padding:10px 14px;border:1px solid var(--border-strong);border-radius:7px;background:var(--white);font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color .2s;}
+.search-input:focus{border-color:var(--gold);}
+.btn-search{padding:10px 18px;background:var(--accent);color:var(--white);border:none;border-radius:7px;font-family:'Outfit',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:background .2s;white-space:nowrap;}
+.btn-search:hover{background:#111;}
+.btn-search:disabled{opacity:.5;cursor:not-allowed;}
+.btn-retry{padding:7px 14px;background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:6px;font-family:'Outfit',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;display:none;}
+.btn-retry.show{display:inline-flex;align-items:center;gap:5px;}
+.pin-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+.pin-item{position:relative;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all .2s;aspect-ratio:3/4;background:var(--cream);}
+.pin-item:hover{border-color:var(--gold);transform:translateY(-2px);}
+.pin-item img{width:100%;height:100%;object-fit:cover;}
+.pin-item-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.7));padding:16px 8px 8px;color:#fff;font-size:10px;opacity:0;transition:opacity .2s;}
+.pin-item:hover .pin-item-overlay{opacity:1;}
+.pin-item.already-used{opacity:.45;}
+.pin-used-badge{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.65);color:#fff;font-size:8px;padding:2px 5px;border-radius:3px;}
+.pin-empty{grid-column:1/-1;text-align:center;padding:48px 0;color:var(--subtle);font-size:12px;}
+.pin-status-msg{font-size:12px;color:var(--muted);text-align:center;padding:12px 0;display:none;}
+.pin-progress-wrap{display:none;background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:16px;gap:10px;flex-direction:column;}
+.pin-progress-wrap.show{display:flex;}
+.pin-progress-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.pin-progress-fill{height:100%;background:var(--gold);transition:width .4s;}
+.pin-progress-msg{font-size:11px;color:var(--muted);}
+.log-title{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--border);}
+.log-list{display:flex;flex-direction:column;gap:8px;}
+.log-item{background:var(--white);border:1px solid var(--border);border-radius:7px;overflow:hidden;cursor:pointer;transition:border-color .2s;}
+.log-item:hover{border-color:var(--gold);}
+.log-item-header{display:flex;align-items:center;gap:8px;padding:9px 10px;}
+.log-item-thumb{width:32px;height:32px;border-radius:5px;object-fit:cover;flex-shrink:0;}
+.log-item-info{flex:1;min-width:0;}
+.log-item-name{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.log-item-meta{font-size:9px;color:var(--subtle);margin-top:1px;}
+.log-item-btns{display:flex;gap:4px;flex-shrink:0;}
+.log-btn{padding:3px 7px;border-radius:4px;border:1px solid var(--border);background:transparent;font-size:10px;cursor:pointer;color:var(--muted);transition:all .2s;}
+.log-btn:hover{border-color:var(--gold);color:var(--gold);}
+.log-btn.del:hover{border-color:var(--danger);color:var(--danger);}
+.log-btn.send:hover{border-color:var(--success);color:var(--success);}
+.log-preview{display:none;padding:0 10px 10px;}
+.log-preview.show{display:block;}
+.log-preview video{width:100%;border-radius:5px;max-height:140px;}
+.log-empty{text-align:center;padding:24px 0;color:var(--subtle);font-size:11px;}
+.sent-badge{display:inline-flex;align-items:center;gap:3px;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--success);background:#edfaf2;border:1px solid #c3efd4;border-radius:3px;padding:2px 5px;}
+.sent-section-title{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--success);padding-bottom:7px;border-bottom:1px solid #c3efd4;display:flex;align-items:center;gap:5px;}
+.sent-item{background:#f7fdf9;border:1px solid #c3efd4;border-radius:7px;padding:9px 10px;}
+.sent-item-name{font-size:11px;color:var(--text);}
+.sent-item-meta{font-size:9px;color:var(--success);margin-top:2px;}
+.sent-item-queue{font-size:9px;color:var(--subtle);margin-top:1px;}
+
+/* Lightbox */
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:20px;}
+.lightbox.open{display:flex;}
+.lightbox-img-wrap{max-width:500px;max-height:60vh;border-radius:10px;overflow:hidden;}
+.lightbox-img-wrap img{width:100%;height:100%;object-fit:contain;max-height:60vh;}
+.lightbox-title{color:#fff;font-size:13px;text-align:center;max-width:440px;}
+.lightbox-actions{display:flex;gap:10px;}
+.btn-make-video{padding:10px 24px;background:var(--gold);color:#fff;border:none;border-radius:7px;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:7px;}
+.btn-make-video:disabled{opacity:.5;cursor:not-allowed;}
+.btn-lightbox-close{padding:10px 18px;background:transparent;color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.3);border-radius:7px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;}
+.btn-lightbox-close:hover{color:#fff;border-color:#fff;}
+
+/* ── SEND MODAL ── */
+.send-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto;}
+.send-modal-overlay.open{display:flex;}
+.send-modal{background:var(--white);border-radius:14px;padding:28px;width:780px;max-width:96vw;box-shadow:0 20px 60px rgba(0,0,0,.25);display:flex;gap:24px;animation:fadeIn .2s ease;}
+.send-modal-left{flex:1;display:flex;flex-direction:column;gap:16px;min-width:0;}
+.send-modal-right{width:300px;flex-shrink:0;display:flex;flex-direction:column;gap:12px;}
+.send-modal-title{font-family:'Cormorant Garamond',serif;font-size:20px;}
+.send-modal-thumb{width:100%;max-height:110px;object-fit:cover;border-radius:7px;border:1px solid var(--border);}
+.send-modal-vidname{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.send-modal label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.send-modal-row{display:flex;gap:8px;}
+.send-modal input[type=number],.send-modal select{width:100%;padding:9px 11px;border:1px solid var(--border-strong);border-radius:7px;background:var(--white);font-family:'Outfit',sans-serif;font-size:12px;color:var(--text);outline:none;}
+.send-modal input[type=number]:focus,.send-modal select:focus{border-color:var(--gold);}
+.send-modal-actions{display:flex;gap:8px;margin-top:4px;}
+.btn-send-confirm{flex:1;padding:11px;background:var(--success);color:#fff;border:none;border-radius:7px;font-family:'Outfit',sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;}
+.btn-send-confirm:hover{background:#219150;}
+.btn-send-confirm:disabled{background:var(--border-strong);color:var(--subtle);cursor:not-allowed;}
+.btn-send-cancel{padding:11px 14px;background:transparent;color:var(--muted);border:1px solid var(--border-strong);border-radius:7px;font-size:12px;cursor:pointer;}
+.btn-send-cancel:hover{border-color:var(--danger);color:var(--danger);}
+
+/* info JSON list */
+.info-list-wrap{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;}
+.info-list-wrap::-webkit-scrollbar{width:3px;}
+.info-list-wrap::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+.info-item{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s;background:var(--white);}
+.info-item:hover{border-color:var(--gold-light);}
+.info-item.selected{border-color:var(--gold);background:#fdf6e8;}
+.info-item-radio{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--border-strong);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.info-item.selected .info-item-radio{background:var(--gold);border-color:var(--gold);}
+.info-item-radio::after{content:'';display:none;width:5px;height:5px;border-radius:50%;background:#fff;}
+.info-item.selected .info-item-radio::after{display:block;}
+.info-item-name{font-size:12px;color:var(--text);flex:1;}
+.info-item-cat{font-size:9px;color:var(--muted);background:var(--cream);border-radius:3px;padding:1px 5px;}
+
+/* info preview panel */
+.info-preview-panel{background:var(--off-white);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px;max-height:420px;overflow-y:auto;}
+.info-preview-panel h4{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+.info-preview-title{font-size:13px;font-weight:400;color:var(--text);line-height:1.5;}
+.info-preview-desc{font-size:11px;color:var(--muted);line-height:1.6;max-height:80px;overflow-y:auto;}
+.info-preview-tags{display:flex;flex-wrap:wrap;gap:4px;}
+.info-preview-tag{font-size:9px;background:var(--cream);border:1px solid var(--border);border-radius:3px;padding:2px 6px;color:var(--muted);}
+.info-none{font-size:12px;color:var(--subtle);text-align:center;padding:20px 0;}
+
+/* timer row (muncul setelah select info) */
+.timer-row{display:flex;gap:8px;align-items:center;}
+.timer-row input[type=number]{width:80px;flex-shrink:0;padding:9px 11px;border:1px solid var(--border-strong);border-radius:7px;font-family:'Outfit',sans-serif;font-size:12px;color:var(--text);outline:none;}
+.timer-row input:focus{border-color:var(--gold);}
+.timer-row select{flex:1;padding:9px 11px;border:1px solid var(--border-strong);border-radius:7px;font-family:'Outfit',sans-serif;font-size:12px;color:var(--text);outline:none;}
+.timer-section{display:none;flex-direction:column;gap:8px;}
+.timer-section.show{display:flex;}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* responsive */
+@media(max-width:768px){
+  #mainGrid{grid-template-columns:1fr;}
+  .panel-left{border-right:none;border-bottom:1px solid var(--border);}
+  .result-grid{grid-template-columns:1fr;}
+  .pin-layout{grid-template-columns:1fr;}
+  .pin-sidebar{border-top:1px solid var(--border);}
+  .send-modal{flex-direction:column;}
+  .send-modal-right{width:100%;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo-title">FrameFlow</div>
+    <div class="logo-sub">Photo to Video</div>
+  </div>
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('maker')" id="tabMaker">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="4" height="4" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="7" y="1" width="4" height="4" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="7" width="4" height="4" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="7" y="7" width="4" height="4" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
+      Maker Video
+    </button>
+    <button class="tab-btn" onclick="switchTab('pinmake')" id="tabPinMake">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M6 7v4M4.5 11h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Pin & Make
+    </button>
+  </nav>
+</header>
+
+<!-- ── MAKER TAB ── -->
+<div id="makerTab" class="active">
+  <div id="mainGrid">
+    <div class="panel-left" id="uploadPanel">
+      <div>
+        <div class="section-label">
+          <div class="section-num" id="num1">1</div>
+          <div class="section-title">Upload Foto</div>
+        </div>
+        <div class="upload-zone" id="uploadZone">
+          <div class="upload-icon-wrap">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 13V4M6 6.5l4-4 4 4" stroke="#b89b6a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 13v2.5a1.5 1.5 0 001.5 1.5h11a1.5 1.5 0 001.5-1.5V13" stroke="#b89b6a" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <h3>Pilih Foto</h3>
+          <p>Klik atau drag & drop</p>
+          <div class="format-tags"><span class="format-tag">JPG</span><span class="format-tag">PNG</span><span class="format-tag">WEBP</span></div>
+        </div>
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,image/bmp">
+      </div>
+      <div class="image-preview-card" id="previewCard">
+        <img id="previewImg" src="" alt="">
+        <div class="image-card-footer">
+          <span id="imgMeta">—</span>
+          <button class="btn-text" onclick="resetUpload()">Ganti Foto</button>
+        </div>
+      </div>
+      <div class="error-box" id="errorBox"></div>
+    </div>
+
+    <div class="panel-right" id="musicPanel">
+      <div>
+        <div class="section-label">
+          <div class="section-num" id="num2">2</div>
+          <div class="section-title">Pilih Musik</div>
+        </div>
+        <div id="musicContainer">
+          <div style="font-size:12px;color:var(--muted);padding:20px 0;text-align:center;" id="musicLoading">Upload foto dulu...</div>
+          <div class="music-list" id="musicList" style="display:none;"></div>
+          <div style="text-align:center;padding:20px;font-size:12px;color:var(--subtle);border:1.5px dashed var(--border);border-radius:8px;display:none;" id="musicEmpty">Tidak ada musik.<br>Tambahkan ke folder <code>music/</code></div>
+        </div>
+      </div>
+      <div id="selectedMusicInfo" style="display:none;padding:10px 14px;background:var(--cream);border-radius:7px;border:1px solid var(--border);">
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Musik Dipilih</div>
+        <div id="selectedMusicName" style="font-size:13px;color:var(--text);"></div>
+      </div>
+      <div style="margin-top:auto;padding-top:12px;">
+        <button class="btn-create" id="btnCreate" onclick="startCreate()" disabled>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1L9 5.5L14 6.5L10.5 9.9L11.2 14L7 11.7L2.8 14L3.5 9.9L0 6.5L5 5.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+          Buat Video
+        </button>
+      </div>
+    </div>
+
+    <!-- progress -->
+    <div id="progressScreen">
+      <div class="progress-spinner"></div>
+      <div class="progress-heading">Membuat Video...</div>
+      <div class="progress-msg" id="progressMsg">Mempersiapkan...</div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-pct" id="progressPct">0%</div>
+    </div>
+
+    <!-- result -->
+    <div id="resultScreen">
+      <div class="result-header">
+        <div class="result-title">Video Selesai</div>
+        <div class="result-subtitle">Siap untuk didownload</div>
+      </div>
+      <div class="result-grid">
+        <div class="video-wrap"><video id="resultVideo" controls playsinline preload="metadata"></video></div>
+        <div class="result-sidebar">
+          <div class="result-meta-card"><h4>Detail</h4><div id="resultMetaRows"></div></div>
+          <div class="result-actions">
+            <a class="btn-download" id="btnDownload" href="#" download>
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v8M3 6.5l3.5 3.5 3.5-3.5M1 12h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Download MP4
+            </a>
+            <button class="btn-next" onclick="nextCreate()">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5h9M7.5 3l3 3.5-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Buat Video Baru
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- maker video list -->
+  <div style="padding:16px 24px;border-top:1px solid var(--border);background:var(--off-white);">
+    <div class="maker-list-title" style="margin-bottom:10px;">📁 Riwayat Maker</div>
+    <div id="makerLogList" style="display:flex;flex-wrap:wrap;gap:8px;">
+      <div class="mlog-empty" id="makerLogEmpty">Belum ada video yang dibuat.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PIN & MAKE TAB ── -->
+<div id="pinMakeTab">
+  <div class="pin-layout">
+    <div class="pin-main">
+      <div>
+        <div class="section-label" style="margin-bottom:16px;">
+          <div class="section-num" style="background:var(--gold);color:#fff;">📌</div>
+          <div class="section-title">Cari Foto Pinterest</div>
+        </div>
+        <div class="search-row">
+          <input type="text" class="search-input" id="pinSearchInput" placeholder="Contoh: Ellie Williams The Last of Us..." onkeydown="if(event.key==='Enter') doPinSearch()">
+          <button class="btn-search" id="btnPinSearch" onclick="doPinSearch()">Search</button>
+          <button class="btn-retry" id="btnPinRetry" onclick="doPinRetry()">↻ Retry</button>
+        </div>
+      </div>
+      <div class="pin-status-msg" id="pinStatusMsg"></div>
+      <div class="pin-gallery" id="pinGallery">
+        <div class="pin-empty" id="pinEmpty">Ketik kata kunci dan klik Search.</div>
+      </div>
+      <div class="pin-progress-wrap" id="pinProgressWrap">
+        <div class="pin-progress-msg" id="pinProgressMsg">Memproses...</div>
+        <div class="pin-progress-bar"><div class="pin-progress-fill" id="pinProgressFill" style="width:0%"></div></div>
+        <div style="font-size:10px;color:var(--subtle);" id="pinProgressPct">0%</div>
+      </div>
+    </div>
+
+    <div class="pin-sidebar">
+      <div class="log-title">Riwayat Video Pinterest</div>
+      <div class="log-list" id="logList">
+        <div class="log-empty" id="logEmpty">Belum ada video.</div>
+      </div>
+      <div id="sentSection" style="display:none;flex-direction:column;gap:8px;">
+        <div class="sent-section-title">✅ Already Sent</div>
+        <div class="log-list" id="sentList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LIGHTBOX ── -->
+<div class="lightbox" id="lightbox" onclick="closeLightboxOutside(event)">
+  <div style="position:absolute;top:16px;right:18px;">
+    <button class="btn-lightbox-close" onclick="closeLightbox()">✕ Tutup</button>
+  </div>
+  <div class="lightbox-img-wrap"><img id="lightboxImg" src="" alt=""></div>
+  <div class="lightbox-title" id="lightboxTitle"></div>
+  <div class="lightbox-actions">
+    <button class="btn-make-video" id="btnMakeVideo" onclick="makeVideoFromPin()">🎬 Make to Video</button>
+  </div>
+</div>
+
+<!-- ── SEND MODAL ── -->
+<div class="send-modal-overlay" id="sendModalOverlay" onclick="closeSendModalOutside(event)">
+  <div class="send-modal">
+
+    <!-- KIRI: form kirim -->
+    <div class="send-modal-left">
+      <div class="send-modal-title">📤 Kirim ke Web 1</div>
+      <img class="send-modal-thumb" id="sendModalThumb" src="" alt="" style="display:none;">
+      <div class="send-modal-vidname" id="sendModalVidName"></div>
+
+      <div>
+        <label>Pilih Info (Judul/Tags/Kategori)</label>
+        <div class="info-list-wrap" id="infoListWrap">
+          <div style="font-size:11px;color:var(--subtle);text-align:center;padding:12px 0;">Memuat...</div>
+        </div>
+      </div>
+
+      <!-- timer & send (muncul setelah pilih info) -->
+      <div class="timer-section" id="timerSection">
+        <div>
+          <label>Timer Upload</label>
+          <div class="timer-row">
+            <input type="number" id="sendTimerValue" value="5" min="1" max="9999">
+            <select id="sendTimerUnit">
+              <option value="hours">Jam</option>
+              <option value="minutes">Menit</option>
+              <option value="seconds">Detik</option>
+            </select>
+          </div>
+        </div>
+        <div id="sendModalStatus" style="font-size:11px;color:var(--muted);display:none;"></div>
+        <div class="send-modal-actions">
+          <button class="btn-send-confirm" id="btnSendConfirm" onclick="confirmSend()">
+            ✓ Kirim Sekarang
+          </button>
+          <button class="btn-send-cancel" onclick="closeSendModal()">Batal</button>
+        </div>
+      </div>
+
+      <div id="timerPlaceholder" style="font-size:11px;color:var(--subtle);text-align:center;padding:8px 0;">
+        ← Pilih info JSON dulu untuk lanjut
+      </div>
+    </div>
+
+    <!-- KANAN: preview info JSON -->
+    <div class="send-modal-right">
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);">Preview Info</div>
+      <div class="info-preview-panel" id="infoPreviewPanel">
+        <div class="info-none">Pilih file JSON di kiri</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<audio id="previewAudio"></audio>
+
+<script>
+let currentImageFilename=null,currentTaskId=null,selectedMusic=null,pollInterval=null;
+let currentAudioItem=null,audioProgressInterval=null;
+let _sendFilename='',_selectedInfoName='';
+let _sentFilenames=new Set();
+let currentPinQuery='',lightboxPin=null,pinPollInterval=null;
+
+const uploadZone=document.getElementById('uploadZone');
+const fileInput=document.getElementById('fileInput');
+const audio=document.getElementById('previewAudio');
+
+// ── UPLOAD ──
+uploadZone.addEventListener('click',()=>fileInput.click());
+uploadZone.addEventListener('dragover',e=>{e.preventDefault();uploadZone.classList.add('drag-over');});
+uploadZone.addEventListener('dragleave',()=>uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop',e=>{e.preventDefault();uploadZone.classList.remove('drag-over');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
+fileInput.addEventListener('change',()=>{if(fileInput.files[0])handleFile(fileInput.files[0]);});
+
+function handleFile(file){
+  if(!file.type.startsWith('image/')){showError('File harus berupa gambar.');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{document.getElementById('previewImg').src=e.target.result;};
+  reader.readAsDataURL(file);
+  const form=new FormData();
+  form.append('photo',file);
+  fetch('/upload',{method:'POST',body:form}).then(r=>r.json()).then(data=>{
+    if(data.error){showError(data.error);return;}
+    currentImageFilename=data.filename;
+    document.getElementById('imgMeta').textContent=`${data.width} × ${data.height} px`;
+    document.getElementById('previewCard').classList.add('show');
+    document.getElementById('num1').classList.add('done');
+    uploadZone.style.display='none';
+    hideError();
+    loadMusicList();
+  }).catch(()=>showError('Gagal mengupload foto.'));
+}
+
+function loadMusicList(){
+  document.getElementById('musicLoading').style.display='block';
+  document.getElementById('musicList').style.display='none';
+  document.getElementById('musicEmpty').style.display='none';
+  fetch('/music-list').then(r=>r.json()).then(data=>{
+    document.getElementById('musicLoading').style.display='none';
+    const files=data.files||[];
+    if(!files.length){document.getElementById('musicEmpty').style.display='block';return;}
+    const list=document.getElementById('musicList');
+    list.innerHTML='';
+    files.forEach(f=>{
+      const item=document.createElement('div');
+      item.className='music-item';
+      item.dataset.name=f.name;
+      item.innerHTML=`
+        <div class="music-item-check"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2.5 2.5 4.5-5" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="music-item-info">
+          <div class="music-item-name" title="${f.name}">${cleanName(f.name)}</div>
+          <div class="music-item-dur">${f.duration||'—'}</div>
+          <div class="audio-progress" id="prog_${CSS.escape(f.name)}"><div class="audio-progress-fill"></div></div>
+        </div>
+        <div class="waveform" id="wave_${CSS.escape(f.name)}"><span></span><span></span><span></span><span></span><span></span></div>
+        <button class="btn-play-pause" id="btn_${CSS.escape(f.name)}" onclick="togglePreview(event,'${escapeName(f.name)}')" title="Preview">
+          <svg width="9" height="11" viewBox="0 0 9 11" fill="none"><path d="M1 1v9l7-4.5L1 1z" fill="#8c8880"/></svg>
+        </button>`;
+      item.addEventListener('click',e=>{if(e.target.closest('.btn-play-pause'))return;selectMusic(f.name,item);});
+      list.appendChild(item);
+    });
+    list.style.display='flex';
+  }).catch(()=>{document.getElementById('musicLoading').textContent='Gagal memuat musik.';});
+}
+
+function cleanName(fn){return fn.replace(/\.[^/.]+$/,'').replace(/_/g,' ');}
+function escapeName(n){return n.replace(/'/g,"\\'").replace(/\\/g,'\\\\');}
+
+function selectMusic(name,el){
+  document.querySelectorAll('.music-item').forEach(i=>i.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedMusic=name;
+  document.getElementById('selectedMusicInfo').style.display='block';
+  document.getElementById('selectedMusicName').textContent=cleanName(name);
+  document.getElementById('num2').classList.add('done');
+  updateCreateBtn();
+}
+
+function updateCreateBtn(){
+  document.getElementById('btnCreate').disabled=!(currentImageFilename&&selectedMusic);
+}
+
+function togglePreview(e,filename){
+  e.stopPropagation();
+  const btn=document.getElementById('btn_'+CSS.escape(filename));
+  const wave=document.getElementById('wave_'+CSS.escape(filename));
+  const prog=document.getElementById('prog_'+CSS.escape(filename));
+  const isPlaying=!audio.paused&&audio.dataset.current===filename;
+  if(currentAudioItem){
+    const p=currentAudioItem;
+    const pb=document.getElementById('btn_'+CSS.escape(p));
+    const pw=document.getElementById('wave_'+CSS.escape(p));
+    const pp=document.getElementById('prog_'+CSS.escape(p));
+    if(pb){pb.classList.remove('playing');pb.innerHTML=`<svg width="9" height="11" viewBox="0 0 9 11" fill="none"><path d="M1 1v9l7-4.5L1 1z" fill="#8c8880"/></svg>`;}
+    if(pw)pw.classList.remove('active');
+    if(pp)pp.classList.remove('show');
+    clearInterval(audioProgressInterval);
+  }
+  if(isPlaying){audio.pause();currentAudioItem=null;return;}
+  audio.src='/music/'+encodeURIComponent(filename);
+  audio.dataset.current=filename;
+  audio.play().then(()=>{
+    currentAudioItem=filename;
+    btn.classList.add('playing');
+    btn.innerHTML=`<svg width="9" height="10" viewBox="0 0 9 10" fill="none"><rect x="1" y="1" width="2.5" height="8" rx=".8" fill="white"/><rect x="5.5" y="1" width="2.5" height="8" rx=".8" fill="white"/></svg>`;
+    wave.classList.add('active');
+    prog.classList.add('show');
+    audioProgressInterval=setInterval(()=>{
+      if(!audio.duration)return;
+      prog.querySelector('.audio-progress-fill').style.width=(audio.currentTime/audio.duration*100)+'%';
+    },300);
+  }).catch(()=>{});
+  audio.onended=()=>{
+    btn.classList.remove('playing');
+    btn.innerHTML=`<svg width="9" height="11" viewBox="0 0 9 11" fill="none"><path d="M1 1v9l7-4.5L1 1z" fill="#8c8880"/></svg>`;
+    wave.classList.remove('active');
+    prog.classList.remove('show');
+    prog.querySelector('.audio-progress-fill').style.width='0%';
+    clearInterval(audioProgressInterval);
+    currentAudioItem=null;
+  };
+}
+
+function resetUpload(){
+  currentImageFilename=null;selectedMusic=null;fileInput.value='';
+  document.getElementById('previewCard').classList.remove('show');
+  document.getElementById('previewImg').src='';
+  uploadZone.style.display='';
+  document.getElementById('num1').classList.remove('done');
+  document.getElementById('num2').classList.remove('done');
+  document.getElementById('musicLoading').style.display='block';
+  document.getElementById('musicLoading').textContent='Upload foto dulu...';
+  document.getElementById('musicList').style.display='none';
+  document.getElementById('musicList').innerHTML='';
+  document.getElementById('selectedMusicInfo').style.display='none';
+  hideError();updateCreateBtn();
+  audio.pause();audio.src='';currentAudioItem=null;clearInterval(audioProgressInterval);
+  fileInput.click();
+}
+
+function startCreate(){
+  if(!currentImageFilename||!selectedMusic)return;
+  hideError();
+  audio.pause();audio.src='';currentAudioItem=null;clearInterval(audioProgressInterval);
+  document.getElementById('mainGrid').style.gridTemplateColumns='1fr';
+  document.getElementById('uploadPanel').style.display='none';
+  document.getElementById('musicPanel').style.display='none';
+  document.getElementById('progressScreen').classList.add('show');
+  document.getElementById('resultScreen').classList.remove('show');
+  setProgress(0,'Memulai...');
+  fetch('/create',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({image_filename:currentImageFilename,music_filename:selectedMusic})})
+  .then(r=>r.json()).then(data=>{
+    if(data.error){showProgressError(data.error);return;}
+    currentTaskId=data.task_id;
+    pollProgress();
+  }).catch(err=>showProgressError('Gagal memulai: '+err));
+}
+
+function pollProgress(){
+  pollInterval=setInterval(()=>{
+    fetch(`/progress/${currentTaskId}`).then(r=>r.json()).then(data=>{
+      if(data.status==='processing'){setProgress(data.progress||0,data.message||'...');}
+      else if(data.status==='done'){clearInterval(pollInterval);setProgress(100,'Video selesai!');setTimeout(()=>showResult(data),700);loadMakerLog();}
+      else if(data.status==='error'){clearInterval(pollInterval);showProgressError(data.message||'Terjadi kesalahan.');}
+    }).catch(()=>{});
+  },800);
+}
+
+function setProgress(pct,msg){
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('progressPct').textContent=pct+'%';
+  if(msg)document.getElementById('progressMsg').textContent=msg;
+}
+
+function showProgressError(msg){
+  document.getElementById('progressScreen').classList.remove('show');
+  document.getElementById('uploadPanel').style.display='';
+  document.getElementById('musicPanel').style.display='';
+  document.getElementById('mainGrid').style.gridTemplateColumns='';
+  showError('❌ '+msg);
+}
+
+function showResult(data){
+  document.getElementById('progressScreen').classList.remove('show');
+  document.getElementById('resultScreen').classList.add('show');
+  const video=document.getElementById('resultVideo');
+  video.src=`/outputs/${data.output_filename}`;
+  document.getElementById('btnDownload').href=`/download/${data.output_filename}`;
+  document.getElementById('btnDownload').download=data.output_filename;
+  const dm=Math.floor(data.duration/60),ds=data.duration%60;
+  document.getElementById('resultMetaRows').innerHTML=`
+    <div class="meta-row"><span class="label">Resolusi</span><span class="value">${data.resolution}</span></div>
+    <div class="meta-row"><span class="label">Durasi</span><span class="value">${dm}m ${ds}s</span></div>
+    <div class="meta-row"><span class="label">Musik</span><span class="value">${cleanName(data.music_name)}</span></div>
+    <div class="meta-row"><span class="label">Format</span><span class="value">H.264 / AAC</span></div>`;
+}
+
+function nextCreate(){
+  clearInterval(pollInterval);currentImageFilename=null;currentTaskId=null;selectedMusic=null;fileInput.value='';
+  document.getElementById('resultScreen').classList.remove('show');
+  document.getElementById('progressScreen').classList.remove('show');
+  document.getElementById('uploadPanel').style.display='';
+  document.getElementById('musicPanel').style.display='';
+  document.getElementById('mainGrid').style.gridTemplateColumns='';
+  document.getElementById('previewCard').classList.remove('show');
+  document.getElementById('previewImg').src='';
+  document.getElementById('resultVideo').src='';
+  uploadZone.style.display='';
+  document.getElementById('num1').classList.remove('done');
+  document.getElementById('num2').classList.remove('done');
+  document.getElementById('musicLoading').style.display='block';
+  document.getElementById('musicLoading').textContent='Upload foto dulu...';
+  document.getElementById('musicList').style.display='none';
+  document.getElementById('musicList').innerHTML='';
+  document.getElementById('selectedMusicInfo').style.display='none';
+  hideError();updateCreateBtn();
+}
+
+function showError(msg){const el=document.getElementById('errorBox');el.textContent=msg;el.classList.add('show');}
+function hideError(){document.getElementById('errorBox').classList.remove('show');}
+
+// ── MAKER LOG ──
+function loadMakerLog(){
+  fetch('/maker-log').then(r=>r.json()).then(data=>renderMakerLog(data||[])).catch(()=>{});
+}
+
+function loadMakerLog(){
+  Promise.all([
+    fetch('/maker-log').then(r=>r.json()).catch(()=>[]),
+    fetch('/sent-log').then(r=>r.json()).catch(()=>[])
+  ]).then(([log, sentLog])=>{
+    _sentFilenames=new Set((sentLog||[]).map(e=>e.filename));
+    renderMakerLog(log||[]);
+  });
+}
+
+function renderMakerLog(log){
+  const wrap=document.getElementById('makerLogList');
+  const empty=document.getElementById('makerLogEmpty');
+  Array.from(wrap.querySelectorAll('.mlog-item')).forEach(e=>e.remove());
+  if(!log.length){empty.style.display='block';return;}
+  empty.style.display='none';
+  log.forEach(entry=>{
+    const alreadySent=_sentFilenames.has(entry.filename);
+    const div=document.createElement('div');
+    div.className='mlog-item';
+    div.id='mlogitem_'+entry.id;
+    const dur=entry.duration?`${Math.floor(entry.duration/60)}:${String(entry.duration%60).padStart(2,'0')}`:'';
+    const sf=entry.filename.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    div.innerHTML=`
+      <div class="mlog-item-header" onclick="toggleMlogPreview('${entry.id}')">
+        <div class="mlog-info">
+          <div class="mlog-name">${entry.filename}</div>
+          <div class="mlog-meta">${entry.created_at||''} · ${dur}</div>
+        </div>
+        <div class="mlog-btns" onclick="event.stopPropagation()">
+          <a class="mlog-btn" href="/download/${entry.filename}" download title="Download">⬇</a>
+          ${alreadySent
+            ? `<span class="sent-badge">✓ Sent</span>`
+            : `<button class="mlog-btn" id="mlogsendbtn_${entry.id}" onclick="openSendModal('${sf}','${entry.filename}','')" title="Kirim">📤</button>`}
+          <button class="mlog-btn del" onclick="deleteMlogItem('${sf}','${entry.id}')" title="Hapus">✕</button>
+        </div>
+      </div>
+      <div class="mlog-preview" id="mlogpreview_${entry.id}">
+        <video controls src="/outputs/${entry.filename}" preload="none" style="width:100%;border-radius:5px;max-height:130px;"></video>
+      </div>`;
+    wrap.appendChild(div);
+  });
+}
+
+function toggleMlogPreview(id){
+  const el=document.getElementById('mlogpreview_'+id);
+  if(!el)return;
+  el.classList.toggle('show');
+  if(!el.classList.contains('show')){const v=el.querySelector('video');if(v)v.pause();}
+}
+
+function deleteMlogItem(filename,id){
+  if(!confirm('Hapus video ini?'))return;
+  fetch(`/maker-log/delete/${filename}`,{method:'DELETE'}).then(()=>{
+    const el=document.getElementById('mlogitem_'+id);
+    if(el)el.remove();
+    if(!document.getElementById('makerLogList').querySelector('.mlog-item'))
+      document.getElementById('makerLogEmpty').style.display='block';
+  });
+}
+
+// ── TABS ──
+function switchTab(tab){
+  document.getElementById('makerTab').classList.toggle('active',tab==='maker');
+  document.getElementById('pinMakeTab').classList.toggle('active',tab==='pinmake');
+  document.getElementById('tabMaker').classList.toggle('active',tab==='maker');
+  document.getElementById('tabPinMake').classList.toggle('active',tab==='pinmake');
+  if(tab==='maker')loadMakerLog();
+  if(tab==='pinmake')loadVideoLog();
+}
+
+// ── PIN & MAKE ──
+function doPinSearch(){
+  const q=document.getElementById('pinSearchInput').value.trim();
+  if(!q)return;currentPinQuery=q;fetchPinPhotos(q);
+}
+function doPinRetry(){if(currentPinQuery)fetchPinPhotos(currentPinQuery);}
+
+function fetchPinPhotos(q){
+  const btn=document.getElementById('btnPinSearch');
+  const retryBtn=document.getElementById('btnPinRetry');
+  btn.disabled=true;btn.textContent='Mencari...';
+  retryBtn.classList.remove('show');
+  document.getElementById('pinGallery').innerHTML='';
+  showPinStatus('Mencari foto...');
+  fetch(`/pinterest/search?q=${encodeURIComponent(q)}`)
+  .then(r=>r.json()).then(data=>{
+    btn.disabled=false;btn.textContent='Search';hidePinStatus();
+    if(data.error){showPinStatus('⚠️ '+data.error);return;}
+    renderPinGallery(data.result||[]);
+    retryBtn.classList.add('show');
+  }).catch(()=>{btn.disabled=false;btn.textContent='Search';showPinStatus('⚠️ Gagal. Coba lagi.');});
+}
+
+function renderPinGallery(items){
+  const gallery=document.getElementById('pinGallery');
+  gallery.innerHTML='';
+  if(!items.length){gallery.innerHTML='<div class="pin-empty">Tidak ada foto. Coba kata kunci lain.</div>';return;}
+  items.forEach(item=>{
+    const div=document.createElement('div');
+    div.className='pin-item'+(item.already_used?' already-used':'');
+    div.innerHTML=`<img src="${item.images_url}" alt="${item.grid_title||''}" loading="lazy" onerror="this.parentElement.style.display='none'">
+      <div class="pin-item-overlay">${item.grid_title||''}</div>
+      ${item.already_used?'<div class="pin-used-badge">✓ Sudah dibuat</div>':''}`;
+    div.addEventListener('click',()=>openLightbox(item));
+    gallery.appendChild(div);
+  });
+}
+
+function showPinStatus(msg){const el=document.getElementById('pinStatusMsg');el.textContent=msg;el.style.display='block';}
+function hidePinStatus(){document.getElementById('pinStatusMsg').style.display='none';}
+
+function openLightbox(pin){
+  lightboxPin=pin;
+  document.getElementById('lightboxImg').src=pin.images_url;
+  document.getElementById('lightboxTitle').textContent=pin.grid_title||pin.description||'';
+  document.getElementById('btnMakeVideo').disabled=false;
+  document.getElementById('btnMakeVideo').textContent='🎬 Make to Video';
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open');lightboxPin=null;}
+function closeLightboxOutside(e){if(e.target===document.getElementById('lightbox'))closeLightbox();}
+
+function makeVideoFromPin(){
+  if(!lightboxPin)return;
+  const btn=document.getElementById('btnMakeVideo');
+  btn.disabled=true;btn.textContent='Mengirim...';
+  fetch('/pin-make',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({image_url:lightboxPin.images_url,title:lightboxPin.grid_title||lightboxPin.description||'Pinterest Video'})})
+  .then(r=>r.json()).then(data=>{
+    if(data.error){btn.disabled=false;btn.textContent='🎬 Make to Video';alert('Error: '+data.error);return;}
+    closeLightbox();startPinPoll(data.task_id);
+  }).catch(()=>{btn.disabled=false;btn.textContent='🎬 Make to Video';alert('Gagal membuat video.');});
+}
+
+function startPinPoll(taskId){
+  const pw=document.getElementById('pinProgressWrap');
+  pw.classList.add('show');
+  document.getElementById('pinProgressFill').style.width='0%';
+  document.getElementById('pinProgressMsg').textContent='Memulai...';
+  document.getElementById('pinProgressPct').textContent='0%';
+  if(pinPollInterval)clearInterval(pinPollInterval);
+  pinPollInterval=setInterval(()=>{
+    fetch(`/progress/${taskId}`).then(r=>r.json()).then(data=>{
+      const pct=data.progress||0;
+      document.getElementById('pinProgressFill').style.width=pct+'%';
+      document.getElementById('pinProgressMsg').textContent=data.message||'';
+      document.getElementById('pinProgressPct').textContent=pct+'%';
+      if(data.status==='done'){clearInterval(pinPollInterval);pw.classList.remove('show');loadVideoLog();showPinStatus('✅ Video selesai!');setTimeout(hidePinStatus,3000);}
+      else if(data.status==='error'){clearInterval(pinPollInterval);pw.classList.remove('show');showPinStatus('⚠️ '+data.message);}
+    });
+  },800);
+}
+
+// ── VIDEO LOG ──
+function loadVideoLog(){
+  Promise.all([
+    fetch('/hasil-video/log').then(r=>r.json()).catch(()=>[]),
+    fetch('/sent-log').then(r=>r.json()).catch(()=>[])
+  ]).then(([log,sentLog])=>{
+    _sentFilenames=new Set((sentLog||[]).map(e=>e.filename));
+    renderVideoLog(log||[]);
+    renderSentLog(sentLog||[]);
+  });
+}
+
+function renderVideoLog(log){
+  const list=document.getElementById('logList');
+  const empty=document.getElementById('logEmpty');
+  Array.from(list.querySelectorAll('.log-item')).forEach(e=>e.remove());
+  if(!log.length){empty.style.display='block';return;}
+  empty.style.display='none';
+  log.forEach(entry=>{
+    const alreadySent=_sentFilenames.has(entry.filename);
+    const item=document.createElement('div');
+    item.className='log-item';item.id='logitem_'+entry.id;
+    const dur=entry.duration?`${Math.floor(entry.duration/60)}:${String(entry.duration%60).padStart(2,'0')}`:'';
+    const sf=entry.filename.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const st=(entry.title||entry.filename).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const sth=(entry.thumb_url||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    item.innerHTML=`
+      <div class="log-item-header" onclick="toggleLogPreview('${entry.id}')">
+        <img class="log-item-thumb" src="${entry.thumb_url||''}" onerror="this.src=''">
+        <div class="log-item-info">
+          <div class="log-item-name">${entry.title||entry.filename}</div>
+          <div class="log-item-meta">${entry.created_at||''} · ${dur}</div>
+        </div>
+        <div class="log-item-btns" onclick="event.stopPropagation()">
+          ${alreadySent?`<span class="sent-badge">✓ Sent</span>`
+            :`<button class="log-btn send" id="sendbtn_${entry.id}" onclick="openSendModal('${sf}','${st}','${sth}')" title="Kirim">📤</button>`}
+          <a class="log-btn" href="/download-hasil/${entry.filename}" download title="Download">⬇</a>
+          <button class="log-btn del" onclick="deleteLogItem('${sf}','${entry.id}')" title="Hapus">✕</button>
+        </div>
+      </div>
+      <div class="log-preview" id="preview_${entry.id}">
+        <video controls src="/hasil-video/${entry.filename}" preload="none"></video>
+      </div>`;
+    list.appendChild(item);
+  });
+}
+
+function renderSentLog(sentLog){
+  const section=document.getElementById('sentSection');
+  const sentList=document.getElementById('sentList');
+  sentList.innerHTML='';
+  if(!sentLog||!sentLog.length){section.style.display='none';return;}
+  section.style.display='flex';
+  sentLog.forEach(entry=>{
+    const t=`${entry.timer_value} ${entry.timer_unit==='hours'?'jam':entry.timer_unit==='minutes'?'menit':'detik'}`;
+    const div=document.createElement('div');
+    div.className='sent-item';
+    div.innerHTML=`<div class="sent-item-name">${entry.title||entry.filename}</div>
+      <div class="sent-item-meta">✅ Sent · timer ${t}</div>
+      ${entry.upload_at?`<div class="sent-item-queue">Upload: ${entry.upload_at}</div>`:''}`;
+    sentList.appendChild(div);
+  });
+}
+
+function toggleLogPreview(id){
+  const el=document.getElementById('preview_'+id);
+  if(!el)return;el.classList.toggle('show');
+  if(!el.classList.contains('show')){const v=el.querySelector('video');if(v)v.pause();}
+}
+
+function deleteLogItem(filename,id){
+  if(!confirm('Hapus video ini?'))return;
+  fetch(`/hasil-video/delete/${filename}`,{method:'DELETE'}).then(()=>{
+    const el=document.getElementById('logitem_'+id);if(el)el.remove();
+    const list=document.getElementById('logList');
+    if(!list.querySelector('.log-item'))document.getElementById('logEmpty').style.display='block';
+  });
+}
+
+// ── SEND MODAL ──
+function openSendModal(filename,title,thumbUrl){
+  _sendFilename=filename;
+  _selectedInfoName='';
+  document.getElementById('sendModalThumb').src=thumbUrl||'';
+  document.getElementById('sendModalThumb').style.display=thumbUrl?'block':'none';
+  document.getElementById('sendModalVidName').textContent=title;
+  document.getElementById('sendModalStatus').style.display='none';
+  document.getElementById('btnSendConfirm').disabled=false;
+  document.getElementById('btnSendConfirm').textContent='✓ Kirim Sekarang';
+  document.getElementById('timerSection').classList.remove('show');
+  document.getElementById('timerPlaceholder').style.display='block';
+  document.getElementById('infoPreviewPanel').innerHTML='<div class="info-none">Pilih file JSON di kiri</div>';
+  document.getElementById('sendModalOverlay').classList.add('open');
+  loadInfoList();
+}
+
+function closeSendModal(){document.getElementById('sendModalOverlay').classList.remove('open');_sendFilename='';}
+function closeSendModalOutside(e){if(e.target===document.getElementById('sendModalOverlay'))closeSendModal();}
+
+let _infoCache=[];
+
+function loadInfoList(){
+  const wrap=document.getElementById('infoListWrap');
+  wrap.innerHTML='<div style="font-size:11px;color:var(--subtle);text-align:center;padding:12px 0;">Memuat...</div>';
+  fetch('/info-list').then(r=>r.json()).then(data=>{
+    _infoCache=data||[];
+    wrap.innerHTML='';
+    if(!_infoCache.length){
+      wrap.innerHTML='<div style="font-size:11px;color:var(--subtle);text-align:center;padding:12px 0;">Tidak ada file JSON di folder info/</div>';
+      return;
+    }
+    _infoCache.forEach(info=>{
+      const div=document.createElement('div');
+      div.className='info-item';
+      div.dataset.name=info.name;
+      div.innerHTML=`
+        <div class="info-item-radio"></div>
+        <div class="info-item-name">${info.name.replace('.json','')}</div>
+        <div class="info-item-cat">cat ${info.category||'—'}</div>`;
+      div.addEventListener('click',()=>selectInfo(info.name,div));
+      wrap.appendChild(div);
+    });
+  }).catch(()=>{wrap.innerHTML='<div style="font-size:11px;color:var(--danger);">Gagal memuat info.</div>';});
+}
+
+function selectInfo(name,el){
+  _selectedInfoName=name;
+  document.querySelectorAll('.info-item').forEach(i=>i.classList.remove('selected'));
+  el.classList.add('selected');
+  // Tampilkan timer section
+  document.getElementById('timerSection').classList.add('show');
+  document.getElementById('timerPlaceholder').style.display='none';
+  // Tampilkan preview
+  const info=_infoCache.find(i=>i.name===name);
+  if(info) renderInfoPreview(info);
+}
+
+function renderInfoPreview(info){
+  const panel=document.getElementById('infoPreviewPanel');
+  const tags=(info.tags||[]).slice(0,30).map(t=>`<span class="info-preview-tag">#${t}</span>`).join('');
+  panel.innerHTML=`
+    <h4>Judul</h4>
+    <div class="info-preview-title">${info.title||'—'}</div>
+    <h4>Deskripsi</h4>
+    <div class="info-preview-desc">${info.description||'—'}</div>
+    <h4>Tags (${(info.tags||[]).length})</h4>
+    <div class="info-preview-tags">${tags}</div>
+    <h4>Kategori</h4>
+    <div style="font-size:12px;color:var(--text);">${info.category||'—'}</div>`;
+}
+
+function confirmSend(){
+  if(!_sendFilename||!_selectedInfoName){alert('Pilih info JSON dulu.');return;}
+  const timerValue=parseFloat(document.getElementById('sendTimerValue').value)||5;
+  const timerUnit=document.getElementById('sendTimerUnit').value;
+  const info=_infoCache.find(i=>i.name===_selectedInfoName);
+  const category=info?info.category:'20';
+  const btn=document.getElementById('btnSendConfirm');
+  const statusEl=document.getElementById('sendModalStatus');
+  btn.disabled=true;btn.textContent='⏳ Mengirim...';
+  statusEl.style.display='block';statusEl.style.color='var(--muted)';
+  statusEl.textContent='Mengupload video... (mungkin butuh beberapa menit)';
+  fetch('/send-to-web1',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      filename:_sendFilename,
+      timer_value:timerValue,
+      timer_unit:timerUnit,
+      category:category,
+      title:info?info.title:'',
+      tags:info?info.tags:[],
+      description:info?info.description:''
+    })})
+  .then(r=>r.json()).then(data=>{
+    if(data.error){
+      btn.disabled=false;btn.textContent='🔄 Coba Lagi';
+      statusEl.style.color='#c0392b';statusEl.textContent='❌ '+data.error;return;
+    }
+    statusEl.style.color='#27ae60';
+    let msg=`✅ Berhasil!`;
+    if(data.upload_at)msg+=` Upload jam ${data.upload_at}`;
+    statusEl.textContent=msg;
+    setTimeout(()=>{closeSendModal();loadVideoLog();loadMakerLog();},2000);
+  }).catch(()=>{
+    btn.disabled=false;btn.textContent='🔄 Coba Lagi';
+    statusEl.style.color='#c0392b';statusEl.textContent='❌ Gagal terhubung.';
+  });
+}
+
+// init
+loadMakerLog();
+</script>
+</body>
+</html>
